@@ -8,5 +8,5 @@ Before any boot-chain change, obtain the exact signed stock package from TECNO/C
 
 ADB-only recovery for an eventual non-privileged app would be app uninstall. This does not constitute recovery from a failed boot-chain modification.
 
-No backup image exists yet. No data-loss action has been proposed or performed. The USB connection was lost during a later read-only check; reconnect before further device tests.
+No backup image exists yet. No data-loss action has been proposed or performed. The USB connection was restored. A read-only bootloader-mode check failed to enumerate fastboot in Windows; the phone returned to Android on the same slot and build with green verified boot. Windows fastboot driver/transport needs diagnosis before it can be counted as a recovery path.
 

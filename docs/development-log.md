@@ -8,4 +8,6 @@
 - Found AIDL GNSS service and legacy HIDL declaration plus MediaTek `mnld`/`mtk_agpsd` processes.
 - Found Google Play Services owns network and fused providers. Provider consistency remains an open design problem.
 - Exact-build stock firmware and validated recovery are missing; privileged changes remain gated.
+- Created private GitHub repository `sagbalaya009-rgb/LocationCore` and pushed two sanitized documentation commits. First push attempt was rejected by GitHub email privacy settings; amended author to the account no-reply address and pushed successfully.
+- ADB later stopped listing the phone. Restarting the PC-side ADB server did not restore USB enumeration; Windows only listed Bluetooth interfaces. Awaiting physical USB reconnection.
 

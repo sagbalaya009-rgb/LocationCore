@@ -16,4 +16,6 @@
 - Bootloader-mode inspection could not obtain a fastboot transport. Android booted again unchanged. Fastboot is not a validated recovery route.
 - Built and installed a normal read-only diagnostic app to observe REAL provider delivery. No location injection was added.
 - Detected passive-update attribution bug in first on-device view; changed to one listener per subscription, rebuilt and reinstalled. Corrected view showed network, fused and passive updates without exposing coordinates in Git.
+- Implemented a platform-independent route and state-machine engine; six unit tests passed. It is not integrated with an Android provider.
+- Primary-user package query found Transsion's system updater, but no accessible exact-build stock image. Third-party archive remains unverified.
 

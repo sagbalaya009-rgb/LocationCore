@@ -10,3 +10,5 @@ ADB-only recovery for an eventual non-privileged app would be app uninstall. Thi
 
 No backup image exists yet. No data-loss action has been proposed or performed. The USB connection was restored. A read-only bootloader-mode check failed to enumerate fastboot in Windows; the phone returned to Android on the same slot and build with green verified boot. Windows fastboot driver/transport needs diagnosis before it can be counted as a recovery path.
 
+The phone has a `com.transsion.systemupdate` package and reports `persist.sys.ota_version` matching this build. No signed full package or readable on-device image was exposed by these read-only checks. The third-party download link was not accessible through the research browser; this is still a lead, not a backup.
+

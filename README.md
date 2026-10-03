@@ -2,7 +2,7 @@
 
 Device-specific Android location virtualization research for the user's TECNO Spark 30C (`TECNO-KL5`, `KL5-OP`).
 
-**Current state: DIAGNOSTIC DEVELOPMENT.** A reversible, read-only provider diagnostic app is installed. No virtualization component is installed. The phone has not been rooted, unlocked, or flashed.
+**Current state: DEVELOPMENT PAUSED ON PHONE; TABLET TARGET PENDING.** The read-only diagnostic app was uninstalled from the phone at the user's request on 2026-10-03. No virtualization component was installed. The phone has not been rooted, unlocked, or flashed. Retain the engine and research as provisional work; the tablet requires a fresh device dossier and architecture decision before any installation.
 
 The device is on Android 14 build `KL5-XK678ABCDEFGHIJKLMNAc-U-OP-260615V2258`, fingerprint `TECNO/KL5-OP/TECNO-KL5:14/UP1A.231005.007/260615V2258:user/release-keys`. Any future installation must refuse other builds until validated.
 

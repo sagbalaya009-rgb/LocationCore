@@ -40,3 +40,9 @@ No static/movement/route mode has been installed or tested. No claim of real-loc
 - The user chose **Reboot now** from the fastbootd menu. ADB then saw the original authorized device. Android returned `sys.boot_completed=1`, the same build fingerprint, `ro.boot.verifiedbootstate=green`, and `ro.boot.slot_suffix=_b`.
 - No bootloader unlock, flash, partition write, erase, or fastboot variable read occurred. Fastbootd remains unvalidated as a recovery route.
 
+## Phone removal, 2026-10-03
+
+- At the user's request, `adb uninstall dev.locationcore` returned `Success` for the diagnostic app installed under Android user 0; it was not installed under user 999.
+- After uninstall, user 0 package listing and package path returned no `dev.locationcore` entry. `dumpsys location` returned no `locationcore_probe` or `dev.locationcore` match. Shell `MOCK_LOCATION` app-op remained at `default`; Android reported `sys.boot_completed=1` and green verified boot.
+- No privileged engine, module, or location virtualization system had been installed. This removal does not erase other phone data. Further device-specific development will be reassessed on the user's tablet.
+

@@ -1,0 +1,19 @@
+# Private device evidence, identifiers, logs, and possible location history
+work/
+device-raw/
+*.log
+*.bugreport
+*.zip
+*.img
+*.bin
+*.apk
+*.keystore
+*.jks
+*.pem
+*.key
+local.properties
+.gradle/
+.idea/
+build/
+**/build/
+

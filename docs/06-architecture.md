@@ -16,5 +16,9 @@ Decision status: **provisional**. The bootloader is locked, root is unavailable,
 
 The deepest justified layer is the one that actually controls the location objects delivered to ordinary consumers and returns cleanly to REAL. The observed GNSS HAL is deep for satellite fixes but does not own the Google network/fused provider services. Kernel access to a GNSS device node is deeper physically but does not imply useful control over Android `Location` objects. A framework-oriented hybrid currently looks more promising for consistency, with a privileged daemon limited to policy/state and no arbitrary shell command endpoint. This is **an inference**, not a device-verified final architecture.
 
+## Framework test-provider probe
+
+On 2026-10-03, a disposable provider named `locationcore_probe` was added through Android's location shell interface after a temporary shell mock app-op grant. It emitted only the dummy coordinate `0,0`, then was removed in a `finally` cleanup path and the app-op returned to default deny. The provider itself was gone, but the passive provider's last-known cache still showed a mock location from `locationcore_probe`. Foreground real network/fused requests later replaced that cached value. This demonstrates a restoration gap for this higher-level mechanism on the actual firmware; a simple add/remove test-provider scheme is not sufficient for immediate REAL restoration.
+
 Before choosing a final layer, trace framework-to-AIDL/HIDL usage, establish exact firmware recovery, measure provider delivery through a diagnostic app, and test REAL restoration. No boot image, vendor binary, system partition, or SELinux policy has been changed.
 

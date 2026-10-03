@@ -8,6 +8,8 @@ Status labels distinguish observed results from intended acceptance. Do not mark
 | Read-only build/boot/partition dossier | TESTED; shell access limits recorded |
 | Offline engine unit tests | 6 passed, 0 failed on local JDK 17 / Gradle 9.5.0 |
 | Real provider baseline | PARTIAL: network, fused, passive live non-mock updates; no fresh GPS fix observed |
+| Disposable framework test provider | TESTED: add/set/remove worked with temporary app-op; passive cache retained dummy until fresh real update |
+| Userspace fastbootd transport | PARTIAL: menu observed on phone; Windows driver absent; no fastboot variable read; Android returned unchanged |
 | STATIC delivery and provider consistency | NOT RUN |
 | MOVEMENT telemetry | NOT RUN |
 | GPX replay | NOT RUN |

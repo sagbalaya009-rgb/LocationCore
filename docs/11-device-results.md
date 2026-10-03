@@ -25,3 +25,18 @@ No static/movement/route mode has been installed or tested. No claim of real-loc
 - Coordinates and screenshots were kept outside Git. The corrected diagnostic APK SHA-256 is `813FA9404C53E137E0B164A661694050C2F42F35AE6D200E393B5BF63CCCA612`.
 - App was sent to the background; the foreground-only listener lifecycle was exercised. No full battery/performance measurement or crash fallback test has run.
 
+## Disposable framework provider probe, 2026-10-03
+
+- Initial `cmd location providers add-test-provider locationcore_probe` failed with `SecurityException`: shell UID 2000 had default-deny `MOCK_LOCATION` app-op.
+- A temporary shell app-op grant allowed adding the disposable provider and delivering dummy `0,0`. The scripted `finally` path removed the provider and returned the shell app-op to default deny.
+- Immediately after removal, `dumpsys location` still showed the dummy mock location in the **passive last-known cache**. No real GPS/network/fused provider was replaced in this probe.
+- Opening the read-only diagnostic app triggered fresh real provider updates; a repeat check found no `locationcore_probe` entry in the current provider section. The app was returned to the background.
+- This test does not demonstrate complete, immediate REAL restoration after virtualization. It is evidence against using a simple test-provider add/remove path as the final system.
+
+## Userspace fastbootd transport, 2026-10-03
+
+- `adb reboot fastboot` led to the phone's fastbootd menu. Neither ADB nor fastboot listed it on Windows.
+- Windows PnP identified `USB\VID_18D1&PID_4EE0`, Problem Code 28 (driver missing). The official Google USB driver INF in the Android SDK lists that hardware ID. Installing/binding it with `pnputil` failed with `Access is denied` under the current non-elevated process.
+- The user chose **Reboot now** from the fastbootd menu. ADB then saw the original authorized device. Android returned `sys.boot_completed=1`, the same build fingerprint, `ro.boot.verifiedbootstate=green`, and `ro.boot.slot_suffix=_b`.
+- No bootloader unlock, flash, partition write, erase, or fastboot variable read occurred. Fastbootd remains unvalidated as a recovery route.
+

@@ -18,4 +18,6 @@
 - Detected passive-update attribution bug in first on-device view; changed to one listener per subscription, rebuilt and reinstalled. Corrected view showed network, fused and passive updates without exposing coordinates in Git.
 - Implemented a platform-independent route and state-machine engine; six unit tests passed. It is not integrated with an Android provider.
 - Primary-user package query found Transsion's system updater, but no accessible exact-build stock image. Third-party archive remains unverified.
+- Probed Android's test-provider API with a disposable provider. Initial call failed because shell mock app-op was default deny; a temporary grant allowed add/set/remove. Passive last-known cache retained the dummy mock point after removal, then cleared after fresh real network/fused updates. Shell app-op returned to default deny. Simple provider removal is insufficient for immediate REAL restoration.
+- Entered userspace fastbootd for read-only transport inspection. Windows detected its USB ID but lacked the driver. Official Google USB driver files were installed into the Android SDK; driver binding failed without administrator elevation. The user selected Reboot now, and Android returned fully booted on the unchanged build, slot B and green verified boot.
 

@@ -29,4 +29,12 @@
 - No LocationCore fatal exception was present in the crash buffer after these tests. The app was left installed, selected as the mock-location app, open in REAL mode, with no active foreground service.
 - Final `0.2.0-alpha` APK SHA-256: `D234638C671042AA6B99932320698918A162A7A136B41FB12970F13B3B0CD194`.
 
+## Controller usability milestone, 2026-10-20
+
+- Added online place search using the Android geocoder with a user-initiated OpenStreetMap Nominatim fallback. Both reached a clear unavailable state because the tablet had no working network/DNS during testing; no successful search result is claimed.
+- Replaced a blank-rendering WebView map experiment with a native offline latitude/longitude grid. Selecting a synthetic point returned `24.258762, 45.000000` to the controller fields.
+- Saved the synthetic map point as a favorite and confirmed it appeared in the Favorites dialog. Starting it also placed it in Recents. The test favorite and recent data were deleted afterward.
+- Re-ran the emergency cleanup after UI testing. The tablet was left with Android location enabled, shell mock app-op at default, LocationCore selected as the user's mock app, no active service, REAL state and no public mock cache.
+- Final `0.3.0-alpha` APK SHA-256: `56424D9ADD4BB33544DDD566B38D00F6EDE835D2513F190EFF634A8218EDFBC3`.
+
 The controller is an application-layer milestone, not the final privileged system. Android intentionally exposes its virtual output as mock.

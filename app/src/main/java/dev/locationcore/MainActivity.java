@@ -2,6 +2,7 @@ package dev.locationcore;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,9 @@ import android.os.Process;
 import android.provider.Settings;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.Address;
+import android.location.Geocoder;
+import android.os.Build;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -24,10 +28,21 @@ import android.widget.Toast;
 
 import java.util.Locale;
 import java.util.Arrays;
+import java.util.List;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /** User-facing controller. It starts in REAL mode and requires Android's mock-app grant. */
 public final class MainActivity extends Activity {
     private static final int PICK_GPX = 42;
+    private static final int PICK_MAP = 43;
     private final Handler refreshHandler = new Handler(Looper.getMainLooper());
     private TextView modeCard;
     private TextView setupCard;
@@ -38,6 +53,10 @@ public final class MainActivity extends Activity {
     private EditText destinationLatitude;
     private EditText destinationLongitude;
     private EditText speed;
+    private EditText search;
+    private TextView searchStatus;
+    private PlaceStore placeStore;
+    private String currentLabel = "Manual selection";
 
     private final Runnable refresh = new Runnable() {
         @Override public void run() {
@@ -48,6 +67,7 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        placeStore = new PlaceStore(this);
         if (!serviceRunning()) {
             getSharedPreferences(VirtualLocationService.PREFS, MODE_PRIVATE).edit()
                     .putBoolean(VirtualLocationService.KEY_ACTIVE, false)
@@ -98,6 +118,21 @@ public final class MainActivity extends Activity {
         });
         column.addView(settings, fullWidth(0, dp(22)));
 
+        TextView chooseTitle = text("CHOOSE LOCATION", 13, 0xff5b6d76);
+        chooseTitle.setTypeface(null, 1);
+        column.addView(chooseTitle);
+        search = textField("Search for a place", "");
+        column.addView(search, fullWidth(dp(10), dp(8)));
+        Button searchButton = button("Search");
+        searchButton.setOnClickListener(v -> searchPlace());
+        column.addView(searchButton, fullWidth(0, dp(8)));
+        Button mapButton = button("Choose on interactive map");
+        mapButton.setOnClickListener(v -> startActivityForResult(new Intent(this, MapPickerActivity.class), PICK_MAP));
+        column.addView(mapButton, fullWidth(0, dp(8)));
+        searchStatus = text("Search requires internet; the map, manual coordinates and engine work offline.", 13, 0xff5b6d76);
+        column.addView(searchStatus, fullWidth(0, dp(5)));
+        column.addView(text("Search data © OpenStreetMap contributors.", 12, 0xff5b6d76), fullWidth(0, dp(22)));
+
         TextView staticTitle = text("STATIC LOCATION", 13, 0xff5b6d76);
         staticTitle.setTypeface(null, 1);
         column.addView(staticTitle);
@@ -108,6 +143,16 @@ public final class MainActivity extends Activity {
         column.addView(latitude, fullWidth(dp(10), dp(8)));
         column.addView(longitude, fullWidth(0, dp(8)));
         column.addView(accuracy, fullWidth(0, dp(12)));
+
+        Button saveFavorite = button("Save as favorite");
+        saveFavorite.setOnClickListener(v -> saveFavorite());
+        column.addView(saveFavorite, fullWidth(0, dp(8)));
+        Button favorites = button("Open favorites");
+        favorites.setOnClickListener(v -> choosePlace("Favorites", placeStore.favorites()));
+        column.addView(favorites, fullWidth(0, dp(8)));
+        Button recents = button("Open recent locations");
+        recents.setOnClickListener(v -> choosePlace("Recent locations", placeStore.recents()));
+        column.addView(recents, fullWidth(0, dp(12)));
 
         Button start = button("Start static location");
         start.setTextColor(Color.WHITE);
@@ -161,6 +206,7 @@ public final class MainActivity extends Activity {
             if (!Double.isFinite(lat) || lat < -90 || lat > 90) throw new IllegalArgumentException("Latitude is outside -90 to 90");
             if (!Double.isFinite(lon) || lon < -180 || lon > 180) throw new IllegalArgumentException("Longitude is outside -180 to 180");
             if (!Float.isFinite(acc) || acc <= 0 || acc > 100000) throw new IllegalArgumentException("Accuracy must be above 0 and at most 100000");
+            placeStore.addRecent(currentLabel, lat, lon);
             startForegroundService(VirtualLocationService.startIntent(this, lat, lon, acc));
         } catch (IllegalArgumentException error) {
             Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
@@ -184,6 +230,7 @@ public final class MainActivity extends Activity {
             double toLon = coordinate(destinationLongitude, -180, 180, "Destination longitude");
             double metresPerSecond = positiveSpeed();
             float acc = positiveAccuracy();
+            placeStore.addRecent(currentLabel, fromLat, fromLon);
             startForegroundService(VirtualLocationService.movementIntent(
                     this, fromLat, fromLon, toLat, toLon, metresPerSecond, acc));
         } catch (IllegalArgumentException error) {
@@ -210,6 +257,12 @@ public final class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_MAP && resultCode == RESULT_OK && data != null) {
+            applyPlace(new PlaceStore.Place("Map selection",
+                    data.getDoubleExtra(MapPickerActivity.EXTRA_LATITUDE, 0),
+                    data.getDoubleExtra(MapPickerActivity.EXTRA_LONGITUDE, 0)));
+            return;
+        }
         if (requestCode != PICK_GPX || resultCode != RESULT_OK || data == null || data.getData() == null) return;
         try {
             getContentResolver().takePersistableUriPermission(data.getData(), Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -220,6 +273,127 @@ public final class MainActivity extends Activity {
         } catch (IllegalArgumentException error) {
             Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    private void searchPlace() {
+        String query = search.getText().toString().trim();
+        if (query.isEmpty()) {
+            Toast.makeText(this, "Enter a place name first.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        if (!Geocoder.isPresent()) {
+            searchNominatim(query);
+            return;
+        }
+        searchStatus.setText("Searching…");
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        if (Build.VERSION.SDK_INT >= 33) {
+            geocoder.getFromLocationName(query, 5, new Geocoder.GeocodeListener() {
+                @Override public void onGeocode(List<Address> addresses) {
+                    runOnUiThread(() -> acceptSearch(query, addresses));
+                }
+
+                @Override public void onError(String errorMessage) {
+                    searchNominatim(query);
+                }
+            });
+        } else {
+            new Thread(() -> {
+                try {
+                    List<Address> addresses = geocoder.getFromLocationName(query, 5);
+                    runOnUiThread(() -> acceptSearch(query, addresses));
+                } catch (IOException error) {
+                    searchNominatim(query);
+                }
+            }, "locationcore-geocoder").start();
+        }
+    }
+
+    private void acceptSearch(String query, List<Address> addresses) {
+        if (addresses == null || addresses.isEmpty()) {
+            searchNominatim(query);
+            return;
+        }
+        Address result = addresses.get(0);
+        String label = result.getMaxAddressLineIndex() >= 0 ? result.getAddressLine(0) : query;
+        applyPlace(new PlaceStore.Place(label, result.getLatitude(), result.getLongitude()));
+        searchStatus.setText("Selected: " + label);
+    }
+
+    private void searchNominatim(String query) {
+        runOnUiThread(() -> searchStatus.setText("Searching OpenStreetMap…"));
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                String encoded = URLEncoder.encode(query, "UTF-8");
+                connection = (HttpURLConnection) new URL(
+                        "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&q=" + encoded)
+                        .openConnection();
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("User-Agent", "LocationCore/0.3 (private device controller)");
+                if (connection.getResponseCode() != 200) throw new IOException("HTTP " + connection.getResponseCode());
+                StringBuilder body = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (body.length() + line.length() > 262144) throw new IOException("Search response too large");
+                        body.append(line);
+                    }
+                }
+                JSONArray results = new JSONArray(body.toString());
+                if (results.length() == 0) {
+                    runOnUiThread(() -> searchStatus.setText("No result found for “" + query + "”."));
+                    return;
+                }
+                JSONObject first = results.getJSONObject(0);
+                PlaceStore.Place place = new PlaceStore.Place(first.getString("display_name"),
+                        Double.parseDouble(first.getString("lat")),
+                        Double.parseDouble(first.getString("lon")));
+                runOnUiThread(() -> applyPlace(place));
+            } catch (Exception error) {
+                runOnUiThread(() -> searchStatus.setText("Search unavailable: " + error.getMessage()));
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }, "locationcore-nominatim").start();
+    }
+
+    private void saveFavorite() {
+        try {
+            double lat = coordinate(latitude, -90, 90, "Latitude");
+            double lon = coordinate(longitude, -180, 180, "Longitude");
+            EditText name = textField("Favorite name", currentLabel.equals("Manual selection") ? "" : currentLabel);
+            new AlertDialog.Builder(this)
+                    .setTitle("Save favorite")
+                    .setView(name)
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Save", (dialog, which) -> {
+                        placeStore.addFavorite(name.getText().toString(), lat, lon);
+                        Toast.makeText(this, "Favorite saved.", Toast.LENGTH_SHORT).show();
+                    }).show();
+        } catch (IllegalArgumentException error) {
+            Toast.makeText(this, error.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void choosePlace(String title, List<PlaceStore.Place> places) {
+        if (places.isEmpty()) {
+            Toast.makeText(this, title + " is empty.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        CharSequence[] labels = new CharSequence[places.size()];
+        for (int i = 0; i < places.size(); i++) labels[i] = places.get(i).toString();
+        new AlertDialog.Builder(this).setTitle(title).setItems(labels,
+                (dialog, which) -> applyPlace(places.get(which))).show();
+    }
+
+    private void applyPlace(PlaceStore.Place place) {
+        latitude.setText(String.format(Locale.US, "%.6f", place.latitude));
+        longitude.setText(String.format(Locale.US, "%.6f", place.longitude));
+        currentLabel = place.name;
+        searchStatus.setText("Selected: " + place.name);
     }
 
     private double coordinate(EditText field, double minimum, double maximum, String name) {
@@ -322,6 +496,17 @@ public final class MainActivity extends Activity {
         field.setInputType(android.text.InputType.TYPE_CLASS_NUMBER
                 | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
                 | android.text.InputType.TYPE_NUMBER_FLAG_SIGNED);
+        field.setPadding(dp(14), dp(12), dp(14), dp(12));
+        field.setBackgroundColor(Color.WHITE);
+        return field;
+    }
+
+    private EditText textField(String hint, String value) {
+        EditText field = new EditText(this);
+        field.setHint(hint);
+        field.setText(value);
+        field.setTextSize(16);
+        field.setSingleLine(true);
         field.setPadding(dp(14), dp(12), dp(14), dp(12));
         field.setBackgroundColor(Color.WHITE);
         return field;

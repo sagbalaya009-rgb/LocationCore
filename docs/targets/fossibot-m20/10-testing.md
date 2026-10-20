@@ -16,7 +16,10 @@
 | Repeated transition endurance | NOT RUN |
 | Real outdoor GNSS restoration/fix | NOT RUN; baseline delivered no fix indoors |
 | File-picker GPX workflow | PARTIAL: parser and on-device route service passed with a private fixture; human picker flow not yet exercised |
-| Map/search/favorites/recents | NOT IMPLEMENTED |
+| Offline native map selection | PASSED: synthetic grid point returned 24.258762, 45.000000 to the coordinate fields |
+| Favorites | PASSED: saved location appeared in the Favorites dialog; synthetic fixture was removed afterward |
+| Recents | PASSED: started selection appeared with its coordinates; synthetic fixture was removed afterward |
+| Place search | PARTIAL: Android geocoder returned unavailable and OpenStreetMap fallback reached its error path because tablet DNS/network was unavailable |
 | Battery/performance measurement | NOT RUN |
 
 Coordinates used by the automated integration fixtures were synthetic equatorial values. No personal or historical location is stored in Git.

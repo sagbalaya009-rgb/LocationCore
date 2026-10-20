@@ -1,6 +1,7 @@
 package dev.locationcore.engine;
 
-import java.io.FilterInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 /** Strict GPX track/route point parser. External entities and DTDs are refused. */
@@ -18,18 +21,57 @@ public final class GpxParser {
 
     public static Route parse(InputStream input) throws IOException {
         if (input == null) throw new IllegalArgumentException("GPX input required");
+        byte[] document = readBounded(input);
+        if (contains(document, "<!DOCTYPE") || contains(document, "<!ENTITY") || contains(document, new byte[]{0})) {
+            throw new IllegalArgumentException("Invalid or unsafe GPX");
+        }
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setNamespaceAware(true);
         try {
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            setFeatureIfSupported(factory, "http://apache.org/xml/features/disallow-doctype-decl", true);
+            setFeatureIfSupported(factory, "http://xml.org/sax/features/external-general-entities", false);
+            setFeatureIfSupported(factory, "http://xml.org/sax/features/external-parameter-entities", false);
             Handler handler = new Handler();
-            factory.newSAXParser().parse(new BoundedInputStream(input), handler);
+            XMLReader reader = factory.newSAXParser().getXMLReader();
+            reader.setEntityResolver((publicId, systemId) -> { throw new SAXException("External entity refused"); });
+            reader.setContentHandler(handler);
+            reader.parse(new InputSource(new ByteArrayInputStream(document)));
             return new Route(handler.points);
         } catch (ParserConfigurationException | SAXException failure) {
             throw new IllegalArgumentException("Invalid or unsafe GPX", failure);
         }
+    }
+
+    private static void setFeatureIfSupported(SAXParserFactory factory, String feature, boolean value) {
+        try { factory.setFeature(feature, value); }
+        catch (ParserConfigurationException | SAXException ignored) { }
+    }
+
+    private static byte[] readBounded(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        byte[] buffer = new byte[8192];
+        long count = 0;
+        int amount;
+        while ((amount = input.read(buffer)) >= 0) {
+            count += amount;
+            if (count > MAX_BYTES) throw new IOException("GPX exceeds 5 MiB");
+            output.write(buffer, 0, amount);
+        }
+        return output.toByteArray();
+    }
+
+    private static boolean contains(byte[] document, String ascii) {
+        return contains(document, ascii.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+    }
+
+    private static boolean contains(byte[] document, byte[] needle) {
+        outer: for (int i = 0; i <= document.length - needle.length; i++) {
+            for (int j = 0; j < needle.length; j++) {
+                if (document[i + j] != needle[j]) continue outer;
+            }
+            return true;
+        }
+        return false;
     }
 
     private static final class Handler extends DefaultHandler {
@@ -79,19 +121,5 @@ public final class GpxParser {
         }
     }
 
-    private static final class BoundedInputStream extends FilterInputStream {
-        private long count;
-        BoundedInputStream(InputStream input) { super(input); }
-        @Override public int read() throws IOException {
-            int value = super.read();
-            if (value >= 0 && ++count > MAX_BYTES) throw new IOException("GPX exceeds 5 MiB");
-            return value;
-        }
-        @Override public int read(byte[] bytes, int offset, int length) throws IOException {
-            int amount = super.read(bytes, offset, length);
-            if (amount > 0 && (count += amount) > MAX_BYTES) throw new IOException("GPX exceeds 5 MiB");
-            return amount;
-        }
-    }
 }
 

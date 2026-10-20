@@ -12,7 +12,7 @@
 | Normal STOP | PASSED: provider overrides removed, foreground service stopped, public last-known API returned no mock |
 | Emergency ADB cleanup during active STATIC | PASSED: package stopped, three overrides removed, shell app-op restored to default, original location-enabled state restored, relaunch reported REAL and no mock cache |
 | Crash buffer after mode tests | PASSED: no LocationCore fatal exception found |
-| Reboot default REAL | NOT RUN |
+| Reboot default REAL | PASSED: after a normal reboot the app process and service were absent; saved state remained REAL, inactive and free of stale mock cache; a cold launch did not start the service |
 | Repeated transition endurance | NOT RUN |
 | Real outdoor GNSS restoration/fix | NOT RUN; baseline delivered no fix indoors |
 | File-picker GPX workflow | PARTIAL: parser and on-device route service passed with a private fixture; human picker flow not yet exercised |

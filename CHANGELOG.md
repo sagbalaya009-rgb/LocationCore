@@ -16,5 +16,5 @@
 - Added REAL, STATIC, two-point MOVEMENT and GPX ROUTE modes with a foreground service and visible mock status.
 - Added manual coordinates, speed/accuracy controls, online place search with OpenStreetMap fallback, an offline native coordinate map, favorites, recents and diagnostics.
 - Added and exercised an exact-build emergency ADB cleanup that removes provider overrides, clears stale public mock cache and restores Android location state.
-- Verified STATIC, MOVEMENT, GPX replay, normal STOP, emergency cleanup, map selection, favorites and recents on the tablet. Online search remains unverified because the tablet had no working network/DNS.
+- Verified STATIC, MOVEMENT, GPX replay, normal STOP, emergency cleanup, reboot-safe REAL default, map selection, favorites and recents on the tablet. Online search remains unverified because the tablet had no working network/DNS.
 

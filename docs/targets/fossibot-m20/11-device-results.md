@@ -39,3 +39,10 @@
 - Final `0.3.0-alpha` APK SHA-256: `56424D9ADD4BB33544DDD566B38D00F6EDE835D2513F190EFF634A8218EDFBC3`.
 
 The controller is an application-layer milestone, not the final privileged system. Android intentionally exposes its virtual output as mock.
+
+## Privileged-path reconnaissance, 2026-10-20
+
+- Android reported a locked green boot chain and `sys.oem_unlock_allowed=0`.
+- Entered bootloader fastboot mode after running the guarded LocationCore cleanup. Windows detected MediaTek USB `VID_0E8D&PID_201C` but reported driver problem code 28, so no unlock or flash command was issued and no fastboot variable result is claimed.
+- Returned to Android with the power-button restart. The same build booted normally; bootloader lock and green verified-boot state remained intact; LocationCore remained REAL and inactive with no service.
+- Identified the bundled `com.incar.update` ADUPS client and FOTA version `M20_WXGA_V1.0_20241212_0110`. This identifies the update channel but does not provide the complete signed factory images required by the recovery gate.

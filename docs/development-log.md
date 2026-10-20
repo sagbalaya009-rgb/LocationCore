@@ -34,4 +34,5 @@
 - Normal STOP passed. Built and exercised an exact-build ADB emergency cleanup against an active session; provider overrides, the temporary shell app-op, location-enabled state, public last-known cache, and REAL relaunch all restored as intended.
 - Added geocoding with an OpenStreetMap fallback, a native offline coordinate-map picker, local favorites and recents. Map, favorites and recents passed with synthetic data that was removed after testing. Search handled the tablet's unavailable network correctly but could not produce a live result.
 - Installed the final `0.3.0-alpha` artifact and passed the reboot-default test: no app process or service auto-started, REAL/inactive state persisted, no stale mock cache was reported, and the post-reboot cold launch had no fatal exception.
+- Began privileged-path reconnaissance without unlocking. Confirmed OEM unlock is currently disallowed, entered bootloader fastboot mode, observed a missing MediaTek fastboot driver on Windows, and returned to unchanged green-verified Android. Inspected the bundled ADUPS updater and recorded its exact FOTA channel/version, but found no complete signed factory recovery package.
 

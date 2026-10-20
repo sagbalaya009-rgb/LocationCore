@@ -3,6 +3,7 @@
 | Test | Result on 2026-10-20 |
 | --- | --- |
 | Exact-build guard | PASSED |
+| Read-only bootloader entry and Android return | PARTIAL: bootloader fastboot mode was reached and Android returned unchanged; Windows lacked a compatible MediaTek fastboot driver, so fastboot variables were not readable |
 | Offline engine unit suite | PASSED: 6 tests, 0 failures |
 | APK build/install/launch | PASSED |
 | REAL default | PASSED after normal launch and emergency recovery relaunch |

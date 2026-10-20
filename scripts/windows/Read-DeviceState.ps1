@@ -33,10 +33,14 @@ $result = [ordered]@{
     selinux = ((& $AdbPath shell getenforce) | Out-String).Trim()
 }
 
-$expectedFingerprint = 'TECNO/KL5-OP/TECNO-KL5:14/UP1A.231005.007/260615V2258:user/release-keys'
-$result.supported_build_match = ($result.fingerprint -ceq $expectedFingerprint)
+$supportedFingerprints = [ordered]@{
+    'TECNO/KL5-OP/TECNO-KL5:14/UP1A.231005.007/260615V2258:user/release-keys' = 'TECNO Spark 30C phone research target'
+    'FOSSiBOT/DT1/DT1:13/TP1A.220624.014/1675770926:user/release-keys' = 'FOSSiBOT M20 tablet active target'
+}
+$result.target = $supportedFingerprints[$result.fingerprint]
+$result.supported_build_match = ($null -ne $result.target)
 [pscustomobject]$result | Format-List
 if (-not $result.supported_build_match) {
-    throw 'The connected firmware does not match the investigated KL5 build.'
+    throw 'The connected firmware does not match any investigated LocationCore build.'
 }
 

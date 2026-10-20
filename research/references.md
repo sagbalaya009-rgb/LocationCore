@@ -12,3 +12,10 @@
 
 Primary source for the device findings is read-only output from the connected phone on 2026-10-03. Raw output is private and excluded from Git.
 
+## FOSSiBOT M20 tablet
+
+- FOSSiBOT US, [official support page](https://us.fossibot.com/pages/support) — official support contact route; no exact M20 build package was exposed during the 2026-10-20 search.
+- AOSP, [LocationProviderManager](https://android.googlesource.com/platform/frameworks/base/+/master/services/core/java/com/android/server/location/provider/LocationProviderManager.java) and [mock-removal test](https://android.googlesource.com/platform/frameworks/base/+/master/services/tests/mockingservicestests/src/com/android/server/location/provider/LocationProviderManagerTest.java) — reference behavior for clearing mock last-known locations when removing a test-provider override; tablet behavior was also checked through the public API.
+
+Primary source for the tablet findings is privacy-filtered, read-only output from the connected tablet on 2026-10-20. Raw output and any live coordinates remain private and excluded from Git.
+

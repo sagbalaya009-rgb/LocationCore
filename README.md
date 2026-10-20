@@ -1,14 +1,14 @@
 # LocationCore
 
-Device-specific Android location virtualization research for the user's TECNO Spark 30C (`TECNO-KL5`, `KL5-OP`).
+Device-specific Android location virtualization research. The active target is now the user's FOSSiBOT M20 tablet (`M20`, `DT1`); the earlier TECNO Spark 30C work is retained as a separate historical target.
 
-**Current state: DEVELOPMENT PAUSED ON PHONE; TABLET TARGET PENDING.** The read-only diagnostic app was uninstalled from the phone at the user's request on 2026-10-03. No virtualization component was installed. The phone has not been rooted, unlocked, or flashed. Retain the engine and research as provisional work; the tablet requires a fresh device dossier and architecture decision before any installation.
+**Current state: TABLET RECONNAISSANCE AND DIAGNOSTIC DEVELOPMENT.** The phone diagnostic app was removed on 2026-10-03. On 2026-10-20, the connected tablet was identified read-only as a stock, locked FOSSiBOT M20 running Android 13 build `M20_WXGA_V1.0_20241212`. No virtualization component, root, unlock, or flash has been applied to either device.
 
-The device is on Android 14 build `KL5-XK678ABCDEFGHIJKLMNAc-U-OP-260615V2258`, fingerprint `TECNO/KL5-OP/TECNO-KL5:14/UP1A.231005.007/260615V2258:user/release-keys`. Any future installation must refuse other builds until validated.
+The tablet fingerprint is `FOSSiBOT/DT1/DT1:13/TP1A.220624.014/1675770926:user/release-keys`. Installation tooling must refuse uninvestigated builds.
 
-The first read-only investigation found a locked AVB boot chain and MediaTek AIDL GNSS service. The network and fused providers are supplied by Google Play Services. A recovery image matching this exact build has **not** been obtained or validated. Privileged device changes are therefore paused.
+The tablet investigation found a locked, green AVB boot chain, Virtual A/B dynamic partitions, and MediaTek AIDL/HIDL GNSS services. Google Play Services supplies network and fused providers. An exact-build recovery image has **not** been obtained or validated, so privileged device changes remain paused.
 
-The diagnostic app displays live GPS, network, fused and passive provider metadata while open. It does not inject or save location. It is not the finished controller. See [device dossier](docs/01-device-dossier.md), [location architecture](docs/04-location-stack.md), [GNSS architecture](docs/05-gnss-stack.md), [recovery gate](docs/08-recovery-plan.md), and [diagnostic build/install steps](docs/09-installation.md).
+The current non-root controller can emit STATIC, two-point MOVEMENT, and imported GPX ROUTE locations through Android's official test-provider mechanism. Android marks the output as mock. REAL is the default, virtual modes never auto-start after reboot, and STOP removes the GPS/network/fused overrides. See the [tablet dossier](docs/targets/fossibot-m20/01-device-dossier.md), [tablet GNSS stack](docs/targets/fossibot-m20/05-gnss-stack.md), [architecture decision](docs/targets/fossibot-m20/adr/0001-locked-device-integration.md), [tablet recovery gate](docs/targets/fossibot-m20/08-recovery-plan.md), and [build/install steps](docs/09-installation.md). The original phone documents remain under `docs/` as historical evidence.
 
-`engine/` contains a platform-independent coordinate, GPX and state-machine library. Its tests run locally; it is not connected to the Android provider stack yet.
+`engine/` contains the platform-independent coordinate, GPX and state-machine library. The Android foreground service now maps its output to the tablet's GPS, network and fused test providers at 1 Hz.
 

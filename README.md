@@ -1,5 +1,7 @@
 # LocationCore
 
+> **Status: UNDER DEVELOPMENT** — This is an experimental Android location diagnostics and test-provider research project. Device compatibility and privileged integration are not production-ready. Existing capabilities and limits are documented below.
+
 Device-specific Android location virtualization research. The active target is now the user's FOSSiBOT M20 tablet (`M20`, `DT1`); the earlier TECNO Spark 30C work is retained as a separate historical target.
 
 **Current state: TABLET RECONNAISSANCE AND DIAGNOSTIC DEVELOPMENT.** The phone diagnostic app was removed on 2026-10-03. On 2026-10-20, the connected tablet was identified read-only as a stock, locked FOSSiBOT M20 running Android 13 build `M20_WXGA_V1.0_20241212`. No virtualization component, root, unlock, or flash has been applied to either device.
